@@ -1,0 +1,63 @@
+/* app.css */
+
+/* Header Styling */
+header {
+  background-color: #0d6efd !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+header h4 {
+  font-weight: 600;
+}
+header h6 {
+  font-size: 0.95rem;
+}
+
+/* Toast Notification */
+.toast {
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.toast-body {
+  font-weight: 500;
+}
+
+/* Sidebar Toggle Button */
+.btn-primary.m-2 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Offcanvas Sidebar */
+.offcanvas {
+  background-color: #f8f9fa;
+}
+.offcanvas-header {
+  border-bottom: 1px solid #dee2e6;
+}
+.offcanvas-title {
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+/* Sidebar Nav Links */
+.nav-link {
+  padding: 10px 0;
+  font-size: 0.95rem;
+  color: #212529;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.nav-link:hover {
+  background-color: #e9ecef;
+  color: #0d6efd;
+  border-radius: 4px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  header h4 {
+    font-size: 1rem;
+  }
+  header h6 {
+    display: none;
+  }
+}
