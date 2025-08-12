@@ -14,22 +14,22 @@ function Sidebar({ role }) {
           <>
             <Nav.Link as={Link} to="/owner/apply-permit">Apply for Permit</Nav.Link>
             <Nav.Link as={Link} to="/owner/view-applications">View My Applications</Nav.Link>
+            <Nav.Link href="/help/user-guide.html" target="_blank" rel="noopener noreferrer">Help & Support</Nav.Link>
           </>
         );
       case 'government-boards':
         return (
           <>
             <Nav.Link as={Link} to="/government-boards/review-applications">Review Applications</Nav.Link>
-            <Nav.Link as={Link} to="/government-boards/manage-inspections">Manage Inspections</Nav.Link>
-            <Nav.Link as={Link} to="/government-boards/approve-reject">Approve/Reject Permits</Nav.Link>
+            <Nav.Link href="/help/user-guide.html" target="_blank" rel="noopener noreferrer">Help & Support</Nav.Link>
           </>
         );
       case 'admin':
         return (
           <>
             <Nav.Link as={Link} to="/admin/manage-users">Manage Users</Nav.Link>
-            <Nav.Link as={Link} to="/admin/manage-categories">Manage Permit Categories</Nav.Link>
             <Nav.Link as={Link} to="/admin/view-reports">View Reports</Nav.Link>
+            <Nav.Link href="/help/user-guide.html" target="_blank" rel="noopener noreferrer">Help & Support</Nav.Link>
           </>
         );
       default:
