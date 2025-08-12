@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
+import OwnerUpload from "../../components/OwnerUpload";
+import DocumentList from "../../components/DocumentList";
 
 function OwnerDashboard() {
   const userEmail = localStorage.getItem('currentUserEmail');
@@ -9,6 +11,7 @@ function OwnerDashboard() {
   const userId = localStorage.getItem('currentUserId');
   const [notifications, setNotifications] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
@@ -67,6 +70,13 @@ function OwnerDashboard() {
               </button>
             </div>
           )}
+
+          <OwnerUpload userId={userId} onUploaded={() => setRefreshKey((k) => k + 1)} />
+
+          <div className="card card-body">
+            <h5 className="mb-2">Your Documents</h5>
+            <DocumentList role="owner" userId={userId} refreshKey={refreshKey} />
+          </div>
         </div>
       </div>
     </div>
