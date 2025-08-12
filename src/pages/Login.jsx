@@ -36,11 +36,13 @@ function Login() {
       localStorage.setItem('currentUserId', userId);
       localStorage.setItem('currentUserUsername', username);
 
-      if (userRole === 'owner') navigate('/owner-dashboard');
-      else if (userRole === 'consultant') navigate('/consultant-dashboard');
-      else if (userRole === 'engineer') navigate('/engineer-dashboard');
-      else if (userRole === 'government-boards') navigate('/government-boards-dashboard');
-      else if (userRole === 'admin') navigate('/admin-dashboard');
+      const normalizedRole = (userRole || '').toLowerCase();
+      if (normalizedRole === 'owner') navigate('/owner');
+      else if (normalizedRole === 'consultant') navigate('/consultant');
+      else if (normalizedRole === 'engineer') navigate('/engineer');
+      else if (normalizedRole === 'government-board' || normalizedRole === 'government-boards') navigate('/government-boards');
+      else if (normalizedRole === 'admin') navigate('/admin');
+      else navigate('/');
       
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed.');
@@ -72,7 +74,7 @@ function Login() {
               <option value="owner">Owner</option>
               <option value="consultant">Consultant</option>
               <option value="engineer">Engineer</option>
-              <option value="government-board">GovernmentBoard</option>
+              <option value="government-board">Government Board</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -97,7 +99,7 @@ function Login() {
         </div>
 
         <p className="mt-3 text-center">
-          Are you a citizen? <a href="/register">Register here</a>
+          New Owner? <a href="/register">Register here</a>
         </p>
       </div>
 

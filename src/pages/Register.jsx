@@ -11,7 +11,7 @@ function Register() {
   const navigate = useNavigate();
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isPasswordStrong = (pwd) => /^(?=.[A-Z])(?=.[a-z])(?=.\d)(?=.[@$!%?#&])[A-Za-z\d@$!%?#&]{6,}$/.test(pwd);
+  const isPasswordStrong = (pwd) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%?#&])[A-Za-z\d@$!%?#&]{6,}$/.test(pwd);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -28,13 +28,13 @@ function Register() {
         username,
         email,
         password,
-        role: 'citizen'
+        role: 'owner'
       });
 
       alert(res.data.message || 'Registration successful.');
       localStorage.setItem('currentUserEmail', email);
       localStorage.setItem('currentUserUsername', username);
-      localStorage.setItem('currentUserRole', 'citizen');
+      localStorage.setItem('currentUserRole', 'owner');
       navigate('/login');
     } catch (error) {
       setError(error.response?.data?.message || 'Registration failed.');
@@ -44,7 +44,7 @@ function Register() {
   return (
     <div className="container mt-5">
       <div className="card p-4 shadow mx-auto" style={{ maxWidth: '400px' }}>
-        <h2 className="text-center mb-3">Citizen Registration</h2>
+        <h2 className="text-center mb-3">Owner Registration</h2>
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form onSubmit={handleRegister}>
