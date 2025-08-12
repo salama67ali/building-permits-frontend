@@ -8,11 +8,11 @@ function GovernmentBoardsDashboard() {
   return (
     <div className="container-fluid">
       <div className="row">
-        <Sidebar role="admin" />
+        <Sidebar role="government-boards" />
         <div className="col-md-10 ms-sm-auto px-4">
-          <Header username={username} /> {/* ✅ Pass to Header */}
+          <Header username={username} />
           <div className="py-4">
-            Government Boards Dashboard Content
+            <p>Use the menu to review applications and issue decisions.</p>
           </div>
         </div>
       </div>
