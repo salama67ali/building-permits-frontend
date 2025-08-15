@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import mockApi from '../../services/mockApi';
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -16,8 +16,8 @@ const ManageUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:9090/api/users");
-      setUsers(res.data.filter(user => user.role !== "admin")); // exclude admin
+      const res = await mockApi.getUsers();
+      setUsers(res.data); // exclude admin
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -77,11 +77,11 @@ const ManageUsers = () => {
       if (editId) {
         const updatedForm = { ...form };
         if (!form.password) delete updatedForm.password;
-        await axios.put(`http://localhost:9090/api/users/${editId}`, updatedForm);
+        // Mock update - in real app this would update the user
         setEditId(null);
         setSuccess('User updated.');
       } else {
-        await axios.post("http://localhost:9090/api/users", form);
+        await mockApi.createUser(form);
         setSuccess('User created. Share the credentials below.');
       }
 
@@ -100,7 +100,7 @@ const ManageUsers = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:9090/api/users/${id}`);
+      // Mock delete - in real app this would delete the user
       fetchUsers();
     } catch {
       alert("Failed to delete user.");

@@ -1,77 +1,273 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import mockApi from '../services/mockApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function Register() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    address: '',
+    companyName: '',
+    licenseNumber: '',
+    experience: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isPasswordStrong = (pwd) => /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%?#&])[A-Za-z\d@$!%?#&]{6,}$/.test(pwd);
+  
+  const isPasswordStrong = (pwd) => 
+    /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/.test(pwd);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
-    if (!username || !email || !password) return setError('All fields are required.');
-    if (!validateEmail(email)) return setError('Invalid email format.');
+    const { username, email, password, confirmPassword, firstName, lastName, phoneNumber, address, companyName, licenseNumber, experience } = formData;
+
+    // Validation
+    if (!username || !email || !password || !confirmPassword || !firstName || !lastName || !phoneNumber || !address) {
+      return setError('All required fields must be filled.');
+    }
+    
+    if (!validateEmail(email)) {
+      return setError('Invalid email format.');
+    }
+    
+    if (password !== confirmPassword) {
+      return setError('Passwords do not match.');
+    }
+    
     if (!isPasswordStrong(password)) {
-      return setError('Password must include uppercase, lowercase, digit, special char and be 6+ chars.');
+      return setError(
+        'Password must be at least 6 characters, include uppercase, lowercase, a digit, and a special character.'
+      );
     }
 
     try {
-      const res = await axios.post('http://localhost:9090/api/register', {
+      const registrationData = {
+        role: 'owner',
         username,
         email,
         password,
-        role: 'owner'
+        firstName,
+        lastName,
+        phoneNumber,
+        address,
+        companyName: companyName || '',
+        licenseNumber: licenseNumber || '',
+        experience: experience || ''
+      };
+
+      const res = await mockApi.register(registrationData);
+
+      setSuccess(res.data.message || 'Registration successful! You can now login.');
+      
+      // Clear form
+      setFormData({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
+        address: '',
+        companyName: '',
+        licenseNumber: '',
+        experience: ''
       });
 
-      alert(res.data.message || 'Registration successful.');
-      localStorage.setItem('currentUserEmail', email);
-      localStorage.setItem('currentUserUsername', username);
-      localStorage.setItem('currentUserRole', 'owner');
-      navigate('/login');
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+
     } catch (error) {
-      setError(error.response?.data?.message || 'Registration failed.');
+      setError(error.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
   return (
-    <div className="container mt-5">
-      <div className="card p-4 shadow mx-auto" style={{ maxWidth: '400px' }}>
-        <h2 className="text-center mb-3">Owner Registration</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
+    <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
+      <div className="card shadow-lg" style={{ maxWidth: '600px', width: '100%' }}>
+        <div className="card-body p-4">
+          <h2 className="text-center mb-4">Owner Registration</h2>
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
 
-        <form onSubmit={handleRegister}>
-          <div className="mb-3">
-            <label className="form-label">Username</label>
-            <input type="text" className="form-control" value={username}
-              onChange={(e) => setUsername(e.target.value)} required />
-          </div>
+          <form onSubmit={handleRegister}>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">First Name *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Last Name *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+            </div>
 
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input type="email" className="form-control" value={email}
-              onChange={(e) => setEmail(e.target.value)} required />
-          </div>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Username *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Email *</label>
+                <input 
+                  type="email" 
+                  className="form-control" 
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+            </div>
 
-          <div className="mb-3">
-            <label className="form-label">Password</label>
-            <input type="password" className="form-control" value={password}
-              onChange={(e) => setPassword(e.target.value)} required />
-          </div>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Password *</label>
+                <input 
+                  type="password" 
+                  className="form-control" 
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required 
+                />
+                <small className="text-muted">
+                  Must be at least 6 characters with uppercase, lowercase, number, and special character
+                </small>
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Confirm Password *</label>
+                <input 
+                  type="password" 
+                  className="form-control" 
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+            </div>
 
-          <button type="submit" className="btn btn-success w-100">Register</button>
-        </form>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Phone Number *</label>
+                <input 
+                  type="tel" 
+                  className="form-control" 
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Address *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+            </div>
 
-        <p className="mt-3 text-center">
-          Already registered? <a href="/login">Login here</a>
-        </p>
+            <div className="row">
+              <div className="col-md-6 mb-3">
+                <label className="form-label">Company Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="col-md-6 mb-3">
+                <label className="form-label">License Number</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  name="licenseNumber"
+                  value={formData.licenseNumber}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label">Years of Experience</label>
+              <input 
+                type="number" 
+                className="form-control" 
+                name="experience"
+                value={formData.experience}
+                onChange={handleChange}
+                min="0"
+                max="50"
+              />
+            </div>
+
+            <div className="d-grid">
+              <button type="submit" className="btn btn-primary btn-lg">
+                Register
+              </button>
+            </div>
+
+            <div className="text-center mt-3">
+              <p className="mb-0">
+                Already have an account?{' '}
+                <button 
+                  type="button" 
+                  className="btn btn-link p-0"
+                  onClick={() => navigate('/login')}
+                >
+                  Login here
+                </button>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

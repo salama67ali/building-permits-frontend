@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import buildingLogo from '../assets/BPM-LOGO.jpg'; // Replace with your actual logo
+// import buildingLogo from '../assets/BPM-LOGO.jpg'; // Replace with your actual logo
 
 function HomePage() {
   const navigate = useNavigate();
@@ -19,14 +19,23 @@ function HomePage() {
         } d-md-flex transition-all`}
         style={{ width: '200px' }}
       >
-        <img
-          src={buildingLogo}
-          alt="Building Logo"
+        <div
           className="img-fluid mb-3"
-          style={{ maxWidth: '80px', transition: 'transform 0.3s ease' }}
+          style={{ 
+            width: '80px', 
+            height: '80px', 
+            backgroundColor: 'white', 
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'transform 0.3s ease'
+          }}
           onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
           onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        />
+        >
+          <span style={{ color: '#007bff', fontWeight: 'bold' }}>BPM</span>
+        </div>
         <h5 className="text-center mb-3">Building Permissions</h5>
         <button
           onClick={() => navigate('/login')}
