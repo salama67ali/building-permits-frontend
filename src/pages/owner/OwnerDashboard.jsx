@@ -27,10 +27,10 @@ function OwnerDashboard() {
             <a className="nav-link text-white active" href="#dashboard">
               <i className="bi bi-speedometer2 me-2"></i>Dashboard
             </a>
-            <a className="nav-link text-white" onClick={() => navigate('/owner/register-project')} style={{cursor: 'pointer'}}>
+            <a className="nav-link text-white" onClick={() => navigate('/owner/apply-permit')} style={{cursor: 'pointer'}}>
               <i className="bi bi-plus-circle me-2"></i>New Application
             </a>
-            <a className="nav-link text-white" onClick={() => navigate('/owner/view-status')} style={{cursor: 'pointer'}}>
+            <a className="nav-link text-white" onClick={() => navigate('/owner/view-applications')} style={{cursor: 'pointer'}}>
               <i className="bi bi-list-check me-2"></i>My Applications
             </a>
             <a className="nav-link text-white" onClick={() => navigate('/owner/upload-documents')} style={{cursor: 'pointer'}}>
@@ -126,13 +126,13 @@ function OwnerDashboard() {
                 </div>
                 <div className="card-body">
                   <div className="d-grid gap-2">
-                    <button className="btn btn-primary" onClick={() => navigate('/owner/register-project')}>
+                    <button className="btn btn-primary" onClick={() => navigate('/owner/apply-permit')}>
                       <i className="bi bi-plus-circle me-2"></i>New Permit Application
                     </button>
                     <button className="btn btn-success" onClick={() => navigate('/owner/upload-documents')}>
                       <i className="bi bi-upload me-2"></i>Upload Documents
                     </button>
-                    <button className="btn btn-info" onClick={() => navigate('/owner/view-status')}>
+                    <button className="btn btn-info" onClick={() => navigate('/owner/view-applications')}>
                       <i className="bi bi-list-check me-2"></i>View All Applications
                     </button>
                     <button className="btn btn-warning">

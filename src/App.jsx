@@ -12,7 +12,15 @@ import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
 import ManageUsers from './pages/admin/ManageUsers';
 import ProjectRegistration from './pages/owner/ProjectRegistration';
 import MyApplications from './pages/owner/MyApplications';
+import UploadDocuments from './pages/owner/UploadDocuments';
 import ReviewApplications from './pages/government-boards/ReviewApplications';
+import ViewSubmittedDocuments from './pages/government-boards/ViewSubmittedDocuments';
+import SendNotification from './pages/government-boards/SendNotification';
+import ViewSubmissions from './pages/admin/ViewSubmissions';
+import SendNotifications from './pages/admin/SendNotifications';
+import UploadBuildingPlanDesign from './pages/consultant/UploadBuildingPlanDesign';
+import ViewDocuments from './pages/consultant/ViewDocuments';
+import EngineerViewSubmittedDocuments from './pages/engineer/ViewSubmittedDocuments';
 
 function App() {
   return (
@@ -34,9 +42,23 @@ function App() {
         {/* Owner */}
         <Route path='/owner/apply-permit' element={<ProjectRegistration />} />
         <Route path='/owner/view-applications' element={<MyApplications />} />
+        <Route path='/owner/upload-documents' element={<UploadDocuments />} />
+
+        {/* Admin */}
+        <Route path='/admin/view-submissions' element={<ViewSubmissions />} />
+        <Route path='/admin/send-notifications' element={<SendNotifications />} />
 
         {/* Government Boards */}
         <Route path='/government-boards/review-applications' element={<ReviewApplications />} />
+        <Route path='/government-boards/view-submitted-documents' element={<ViewSubmittedDocuments />} />
+        <Route path='/government-boards/send-notification' element={<SendNotification />} />
+
+        {/* Consultant */}
+        <Route path='/consultant/upload-building-plan-design' element={<UploadBuildingPlanDesign />} />
+        <Route path='/consultant/view-documents' element={<ViewDocuments />} />
+
+        {/* Engineer */}
+        <Route path='/engineer/view-submitted-documents' element={<EngineerViewSubmittedDocuments />} />
       </Routes>
     </Router>
   );

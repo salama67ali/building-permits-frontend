@@ -66,9 +66,6 @@ function Register() {
         lastName,
         phoneNumber,
         address,
-        companyName: companyName || '',
-        licenseNumber: licenseNumber || '',
-        experience: experience || ''
       };
 
       const res = await mockApi.register(registrationData);
@@ -85,14 +82,12 @@ function Register() {
         lastName: '',
         phoneNumber: '',
         address: '',
-        companyName: '',
-        licenseNumber: '',
-        experience: ''
+      
       });
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
-        navigate('/login');
+      navigate('/login');
       }, 2000);
 
     } catch (error) {
@@ -104,11 +99,11 @@ function Register() {
     <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
       <div className="card shadow-lg" style={{ maxWidth: '600px', width: '100%' }}>
         <div className="card-body p-4">
-          <h2 className="text-center mb-4">Owner Registration</h2>
-          {error && <div className="alert alert-danger">{error}</div>}
+          <h2 className="text-center mb-4"> Registration</h2>
+        {error && <div className="alert alert-danger">{error}</div>}
           {success && <div className="alert alert-success">{success}</div>}
 
-          <form onSubmit={handleRegister}>
+        <form onSubmit={handleRegister}>
             <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label">First Name *</label>
@@ -210,43 +205,7 @@ function Register() {
                   required 
                 />
               </div>
-            </div>
-
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Company Name</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">License Number</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  name="licenseNumber"
-                  value={formData.licenseNumber}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Years of Experience</label>
-              <input 
-                type="number" 
-                className="form-control" 
-                name="experience"
-                value={formData.experience}
-                onChange={handleChange}
-                min="0"
-                max="50"
-              />
-            </div>
+          </div>
 
             <div className="d-grid">
               <button type="submit" className="btn btn-primary btn-lg">

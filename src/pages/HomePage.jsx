@@ -77,10 +77,10 @@ function HomePage() {
           onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         />
         <button
-          onClick={() => navigate('/about')}
+          onClick={() => navigate('/login')}
           className="btn btn-outline-secondary btn-sm mt-3"
         >
-          About Us
+          Get Started
         </button>
       </div>
     </div>
