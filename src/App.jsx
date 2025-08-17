@@ -12,6 +12,7 @@ import ConsultantDashboard from './pages/consultant/ConsultantDashboard';
 import ManageUsers from './pages/admin/ManageUsers';
 import ProjectRegistration from './pages/owner/ProjectRegistration';
 import MyApplications from './pages/owner/MyApplications';
+import ViewApplications from './pages/owner/ViewApplications';
 import UploadDocuments from './pages/owner/UploadDocuments';
 import ReviewApplications from './pages/government-boards/ReviewApplications';
 import ViewSubmittedDocuments from './pages/government-boards/ViewSubmittedDocuments';
@@ -41,7 +42,8 @@ function App() {
 
         {/* Owner */}
         <Route path='/owner/apply-permit' element={<ProjectRegistration />} />
-        <Route path='/owner/view-applications' element={<MyApplications />} />
+        <Route path='/owner/view-applications' element={<ViewApplications />} />
+        <Route path='/owner/my-applications' element={<MyApplications />} />
         <Route path='/owner/upload-documents' element={<UploadDocuments />} />
 
         {/* Admin */}

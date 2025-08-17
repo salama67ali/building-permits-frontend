@@ -7,10 +7,46 @@ function ViewDocuments() {
   const navigate = useNavigate();
   const username = localStorage.getItem('currentUserUsername');
   const [documents] = useState([
-    { id: 'DOC-001', projectId: 'BP-2024-001', type: 'Architectural Plans', status: 'Approved', uploadDate: '2024-01-15', size: '2.5 MB' },
-    { id: 'DOC-002', projectId: 'BP-2024-002', type: 'Structural Design', status: 'Under Review', uploadDate: '2024-01-18', size: '4.2 MB' },
-    { id: 'DOC-003', projectId: 'BP-2024-003', type: 'Electrical Plans', status: 'Pending', uploadDate: '2024-01-20', size: '1.8 MB' },
-    { id: 'DOC-004', projectId: 'BP-2024-001', type: 'HVAC Design', status: 'Approved', uploadDate: '2024-01-22', size: '3.1 MB' }
+    { 
+      id: 'DOC-001', 
+      projectId: 'BP-2024-001', 
+      type: 'Architectural Plans', 
+      status: 'Approved', 
+      uploadDate: '2024-01-15', 
+      size: '2.5 MB',
+      fileName: 'architectural_plans_v2.pdf',
+      fileUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQJQKMC4wNzUgMCAwIDAuMDc1IDAgMCBjbQovRjEgMTIgVGYKNzIgNzIwIFRkCihBcmNoaXRlY3R1cmFsIFBsYW5zKSBUagplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDIwNCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDUKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjI5OAolJUVPRgo='
+    },
+    { 
+      id: 'DOC-002', 
+      projectId: 'BP-2024-002', 
+      type: 'Structural Design', 
+      status: 'Under Review', 
+      uploadDate: '2024-01-18', 
+      size: '4.2 MB',
+      fileName: 'structural_design_v1.dwg',
+      fileUrl: 'data:application/octet-stream;base64,QXV0b0NBRCA='
+    },
+    { 
+      id: 'DOC-003', 
+      projectId: 'BP-2024-003', 
+      type: 'Electrical Plans', 
+      status: 'Pending', 
+      uploadDate: '2024-01-20', 
+      size: '1.8 MB',
+      fileName: 'electrical_plans.pdf',
+      fileUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQJQKMC4wNzUgMCAwIDAuMDc1IDAgMCBjbQovRjEgMTIgVGYKNzIgNzIwIFRkCihFbGVjdHJpY2FsIFBsYW5zKSBUagplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDIwNCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDUKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjI5OAolJUVPRgo='
+    },
+    { 
+      id: 'DOC-004', 
+      projectId: 'BP-2024-001', 
+      type: 'HVAC Design', 
+      status: 'Approved', 
+      uploadDate: '2024-01-22', 
+      size: '3.1 MB',
+      fileName: 'hvac_design.pdf',
+      fileUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQJQKMC4wNzUgMCAwIDAuMDc1IDAgMCBjbQovRjEgMTIgVGYKNzIgNzIwIFRkCihIVkFDIERlc2lnbikgVGoKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyMDQgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA1Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgoyOTgKJSVFT0YK'
+    }
   ]);
 
   const [filter, setFilter] = useState('all');
@@ -18,6 +54,31 @@ function ViewDocuments() {
   const filteredDocuments = documents.filter(doc => 
     filter === 'all' || doc.status.toLowerCase().replace(' ', '-') === filter
   );
+
+  const handleView = (doc) => {
+    if (doc.fileUrl) {
+      window.open(doc.fileUrl, '_blank');
+    } else {
+      alert('File preview not available');
+    }
+  };
+
+  const handleDownload = (doc) => {
+    if (doc.fileUrl) {
+      const link = document.createElement('a');
+      link.href = doc.fileUrl;
+      link.download = doc.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      alert('File download not available');
+    }
+  };
+
+  const handleEdit = (doc) => {
+    alert(`Edit functionality for ${doc.fileName} will be implemented in future updates.`);
+  };
 
   return (
     <div className="d-flex">
@@ -119,13 +180,25 @@ function ViewDocuments() {
                         <td>{doc.size}</td>
                         <td>
                           <div className="btn-group" role="group">
-                            <button className="btn btn-sm btn-outline-primary">
+                            <button 
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handleView(doc)}
+                              title="View document"
+                            >
                               <i className="bi bi-eye"></i> View
                             </button>
-                            <button className="btn btn-sm btn-outline-success">
+                            <button 
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() => handleDownload(doc)}
+                              title="Download document"
+                            >
                               <i className="bi bi-download"></i> Download
                             </button>
-                            <button className="btn btn-sm btn-outline-secondary">
+                            <button 
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => handleEdit(doc)}
+                              title="Edit document"
+                            >
                               <i className="bi bi-pencil"></i> Edit
                             </button>
                           </div>

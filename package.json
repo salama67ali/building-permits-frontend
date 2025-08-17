@@ -14,6 +14,7 @@
     "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "jspdf": "^3.0.1",

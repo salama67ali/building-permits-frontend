@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 
 function DocumentList({ role, userId, canUpdateStatus = false, refreshKey = 0 }) {
   const [documents, setDocuments] = useState([]);
@@ -11,12 +10,17 @@ function DocumentList({ role, userId, canUpdateStatus = false, refreshKey = 0 })
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get('http://localhost:9090/api/documents', {
-        params: { role, userId },
-      });
-      setDocuments(res.data || []);
+      // Load documents from localStorage
+      const storedDocs = JSON.parse(localStorage.getItem('uploadedDocuments') || '[]');
+      
+      // Filter documents by userId if provided
+      const filteredDocs = userId 
+        ? storedDocs.filter(doc => doc.userId === userId)
+        : storedDocs;
+      
+      setDocuments(filteredDocs);
     } catch (e) {
-      setError(e.response?.data?.message || 'Failed to load documents');
+      setError('Failed to load documents');
     } finally {
       setLoading(false);
     }
@@ -30,7 +34,11 @@ function DocumentList({ role, userId, canUpdateStatus = false, refreshKey = 0 })
   async function handleStatusChange(id, status) {
     try {
       setSavingId(id);
-      await axios.put(`http://localhost:9090/api/status/${id}`, { status });
+      // Update status in localStorage
+      const storedDocs = JSON.parse(localStorage.getItem('uploadedDocuments') || '[]');
+      const updatedDocs = storedDocs.map(doc => doc.id === id ? { ...doc, status } : doc);
+      localStorage.setItem('uploadedDocuments', JSON.stringify(updatedDocs));
+      setDocuments(updatedDocs);
       setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status } : d)));
     } catch (e) {
       alert(e.response?.data?.message || 'Failed to update status');
@@ -60,11 +68,14 @@ function DocumentList({ role, userId, canUpdateStatus = false, refreshKey = 0 })
           {documents.map((doc) => (
             <tr key={doc.id}>
               <td>
-                {doc.originalName}
-                {doc.url && (
+                <div className="d-flex align-items-center">
+                  <span className="me-2">{doc.fileName}</span>
+                  <small className="text-muted">({(doc.fileSize / 1024).toFixed(1)} KB)</small>
+                </div>
+                {doc.fileUrl && (
                   <a
                     className="ms-2 btn btn-sm btn-outline-secondary"
-                    href={`http://localhost:9090${doc.url}`}
+                    href={doc.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -72,9 +83,13 @@ function DocumentList({ role, userId, canUpdateStatus = false, refreshKey = 0 })
                   </a>
                 )}
               </td>
-              <td>{doc.docType}</td>
-              <td>{doc.uploadedByRole}</td>
-              <td>{new Date(doc.createdAt).toLocaleString()}</td>
+              <td>
+                <span className="badge bg-info text-capitalize">
+                  {doc.docType.replace('_', ' ')}
+                </span>
+              </td>
+              <td>Owner</td>
+              <td>{new Date(doc.uploadedAt).toLocaleString()}</td>
               <td>
                 {canUpdateStatus ? (
                   <select
@@ -93,12 +108,11 @@ function DocumentList({ role, userId, canUpdateStatus = false, refreshKey = 0 })
                 )}
               </td>
               <td>
-                {doc.url && (
+                {doc.fileUrl && (
                   <a
                     className="btn btn-sm btn-outline-primary"
-                    href={`http://localhost:9090${doc.url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={doc.fileUrl}
+                    download={doc.fileName}
                   >
                     Download
                   </a>

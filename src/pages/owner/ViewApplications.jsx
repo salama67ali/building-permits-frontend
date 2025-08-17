@@ -9,77 +9,92 @@ function ViewApplications() {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock applications data
+  // Applications data with government board status updates
   const [applications] = useState([
     {
-      id: 'PRJ-1703847234567',
-      projectName: 'Residential Villa Complex',
-      type: 'residential',
-      location: 'Nairobi, Karen',
+      id: 'APP-2024-003',
+      projectName: 'Educational Complex',
+      type: 'educational',
+      location: 'University Area',
       coordinates: '-1.2921, 36.8219',
-      submittedDate: '2024-01-15',
+      submittedDate: '2024-01-20',
       status: 'approved',
       overallRisk: 'low',
-      processingTime: '18 days',
+      processingTime: '2 days',
       approvalConditions: ['Standard building codes compliance', 'Regular construction inspections'],
-      nextAction: 'Proceed with construction',
-      gisAssessmentId: 'GIS-1703847234567'
+      nextAction: 'Download permit certificate and proceed with construction',
+      gisAssessmentId: 'GIS-2024-003',
+      governmentStatus: 'Approved',
+      approvedBy: 'Government Boards',
+      approvedDate: '2024-01-22',
+      workflowStage: 'Completed',
+      consultantStatus: 'Building Plan Submitted',
+      engineerStatus: 'Approved',
+      permitCertificateAvailable: true
     },
     {
-      id: 'PRJ-1703847298765',
-      projectName: 'Commercial Shopping Center',
+      id: 'APP-2024-001',
+      projectName: 'Luxury Hotel Development',
       type: 'commercial',
-      location: 'Mombasa, Nyali',
+      location: 'Downtown District',
       coordinates: '-4.0435, 39.6682',
-      submittedDate: '2024-01-20',
+      submittedDate: '2024-01-15',
       status: 'under_review',
       overallRisk: 'moderate',
-      processingTime: '35 days (estimated)',
+      processingTime: '7 days (in progress)',
       approvalConditions: ['Site-specific mitigation measures required', 'Environmental monitoring recommended'],
-      nextAction: 'Awaiting government board review',
-      gisAssessmentId: 'GIS-1703847298765'
+      nextAction: 'Awaiting government board decision',
+      gisAssessmentId: 'GIS-2024-001',
+      governmentStatus: 'Pending Review',
+      approvedBy: null,
+      approvedDate: null,
+      workflowStage: 'Government Review',
+      consultantStatus: 'Building Plan Submitted',
+      engineerStatus: 'Under Review',
+      permitCertificateAvailable: false
     },
     {
-      id: 'PRJ-1703847356789',
-      projectName: 'Industrial Manufacturing Plant',
-      type: 'industrial',
-      location: 'Nakuru, Rift Valley',
+      id: 'APP-2024-002',
+      projectName: 'Medical Center Complex',
+      type: 'healthcare',
+      location: 'Medical District',
       coordinates: '-0.2827, 36.0664',
-      submittedDate: '2024-02-01',
-      status: 'requires_additional_documents',
+      submittedDate: '2024-01-18',
+      status: 'under_review',
       overallRisk: 'high',
-      processingTime: '52 days (estimated)',
+      processingTime: '4 days (in progress)',
       approvalConditions: ['Environmental Impact Assessment (EIA) mandatory', 'Specialized engineering design needed'],
-      nextAction: 'Submit EIA report and geological survey',
-      gisAssessmentId: 'GIS-1703847356789'
+      nextAction: 'Awaiting government board decision',
+      gisAssessmentId: 'GIS-2024-002',
+      governmentStatus: 'Pending Review',
+      approvedBy: null,
+      approvedDate: null,
+      workflowStage: 'Government Review',
+      consultantStatus: 'Building Plan Submitted',
+      engineerStatus: 'Under Review',
+      permitCertificateAvailable: false
     },
     {
-      id: 'PRJ-1703847412345',
-      projectName: 'Residential Apartment Block',
+      id: 'APP-2024-004',
+      projectName: 'Residential Tower',
       type: 'residential',
-      location: 'Kisumu, Lakeside',
+      location: 'Suburban Area',
       coordinates: '-0.0917, 34.7680',
-      submittedDate: '2024-02-10',
+      submittedDate: '2024-01-12',
       status: 'rejected',
       overallRisk: 'high',
-      processingTime: '28 days',
-      approvalConditions: ['Flood mitigation required', 'Alternative site recommended'],
-      nextAction: 'Resubmit with new location or flood mitigation plan',
-      gisAssessmentId: 'GIS-1703847412345'
-    },
-    {
-      id: 'PRJ-1703847467890',
-      projectName: 'Mixed Use Development',
-      type: 'mixed',
-      location: 'Eldoret, Uasin Gishu',
-      coordinates: '-0.5143, 35.2698',
-      submittedDate: '2024-02-15',
-      status: 'pending_assessment',
-      overallRisk: 'pending',
-      processingTime: 'Assessment in progress',
-      approvalConditions: ['Pending environmental assessment'],
-      nextAction: 'Wait for GIS assessment completion',
-      gisAssessmentId: 'GIS-1703847467890'
+      processingTime: '9 days',
+      approvalConditions: ['Environmental impact concerns', 'Alternative site recommended'],
+      nextAction: 'Resubmit with new location or environmental mitigation plan',
+      gisAssessmentId: 'GIS-2024-004',
+      governmentStatus: 'Rejected',
+      approvedBy: 'Government Boards',
+      approvedDate: '2024-01-21',
+      rejectionReason: 'Environmental impact concerns',
+      workflowStage: 'Rejected',
+      consultantStatus: 'Building Plan Submitted',
+      engineerStatus: 'Approved',
+      permitCertificateAvailable: false
     }
   ]);
 
@@ -93,6 +108,70 @@ function ViewApplications() {
     };
     const config = statusConfig[status] || { class: 'bg-secondary', text: 'Unknown' };
     return <span className={`badge ${config.class}`}>{config.text}</span>;
+  };
+
+  const getWorkflowStageBadge = (stage) => {
+    const stageConfig = {
+      'Completed': { class: 'bg-success', text: 'Completed' },
+      'Government Review': { class: 'bg-warning', text: 'Government Review' },
+      'Engineer Review': { class: 'bg-info', text: 'Engineer Review' },
+      'Consultant Review': { class: 'bg-primary', text: 'Consultant Review' },
+      'Rejected': { class: 'bg-danger', text: 'Rejected' },
+      'Initial Submission': { class: 'bg-secondary', text: 'Initial Submission' }
+    };
+    const config = stageConfig[stage] || { class: 'bg-secondary', text: 'Unknown' };
+    return <span className={`badge ${config.class}`}>{config.text}</span>;
+  };
+
+  // Handle permit certificate download
+  const handleDownloadCertificate = (application) => {
+    if (!application.permitCertificateAvailable) {
+      alert('Permit certificate is not yet available. Please wait for approval.');
+      return;
+    }
+
+    const certificateContent = `
+BUILDING PERMIT CERTIFICATE
+============================
+
+Certificate ID: CERT-${application.id}
+Project Name: ${application.projectName}
+Project Type: ${application.type.toUpperCase()}
+Location: ${application.location}
+Owner: ${localStorage.getItem('currentUserUsername')}
+
+APPROVAL DETAILS
+================
+Status: ${application.governmentStatus}
+Approved By: ${application.approvedBy}
+Approval Date: ${new Date(application.approvedDate).toLocaleDateString()}
+GIS Assessment ID: ${application.gisAssessmentId}
+
+CONDITIONS
+==========
+${application.approvalConditions.map((condition, index) => `${index + 1}. ${condition}`).join('\n')}
+
+This certificate authorizes the commencement of construction activities
+for the above-mentioned project in accordance with approved plans and
+specifications.
+
+Issued by: Building Permissions Management System
+Issue Date: ${new Date().toLocaleDateString()}
+
+--- OFFICIAL GOVERNMENT CERTIFICATE ---
+    `;
+
+    const blob = new Blob([certificateContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Building_Permit_Certificate_${application.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert('✅ Building permit certificate downloaded successfully!');
   };
 
   const getRiskBadge = (risk) => {
@@ -115,7 +194,6 @@ function ViewApplications() {
   });
 
   const handleViewDetails = (applicationId) => {
-    // In a real app, this would navigate to a detailed view
     alert(`Viewing details for application: ${applicationId}`);
   };
 
@@ -153,14 +231,11 @@ function ViewApplications() {
           <button className="nav-link text-white btn btn-link text-start" onClick={() => navigate('/owner/apply-permit')}>
             <i className="bi bi-file-earmark-plus me-2"></i>Apply for Permit
           </button>
-          <button className="nav-link text-white btn btn-link text-start active bg-secondary" onClick={() => navigate('/owner/view-applications')}>
+          <button className="nav-link text-white btn btn-link text-start active bg-secondary">
             <i className="bi bi-list-ul me-2"></i>View Applications
           </button>
           <button className="nav-link text-white btn btn-link text-start" onClick={() => navigate('/owner/upload-documents')}>
             <i className="bi bi-cloud-upload me-2"></i>Upload Documents
-          </button>
-          <button className="nav-link text-white btn btn-link text-start" onClick={() => navigate('/owner/my-applications')}>
-            <i className="bi bi-folder me-2"></i>My Applications
           </button>
         </nav>
       </div>
@@ -210,8 +285,8 @@ function ViewApplications() {
                 <div className="col-md-3">
                   <div className="card bg-secondary text-white">
                     <div className="card-body">
-                      <h5>{applications.filter(app => app.status === 'pending_assessment').length}</h5>
-                      <p className="mb-0">Pending Assessment</p>
+                      <h5>{applications.filter(app => app.status === 'rejected').length}</h5>
+                      <p className="mb-0">Rejected</p>
                     </div>
                   </div>
                 </div>
@@ -233,7 +308,6 @@ function ViewApplications() {
                         <option value="under_review">Under Review</option>
                         <option value="requires_additional_documents">Need Documents</option>
                         <option value="rejected">Rejected</option>
-                        <option value="pending_assessment">Pending Assessment</option>
                       </select>
                     </div>
                     <div className="col-md-6">
@@ -272,8 +346,8 @@ function ViewApplications() {
                             <th>Type</th>
                             <th>Location</th>
                             <th>Submitted</th>
-                            <th>Status</th>
-                            <th>Risk Level</th>
+                            <th>Government Status</th>
+                            <th>Workflow Stage</th>
                             <th>Processing Time</th>
                             <th>Actions</th>
                           </tr>
@@ -294,8 +368,13 @@ function ViewApplications() {
                               </td>
                               <td>{app.location}</td>
                               <td>{new Date(app.submittedDate).toLocaleDateString()}</td>
-                              <td>{getStatusBadge(app.status)}</td>
-                              <td>{getRiskBadge(app.overallRisk)}</td>
+                              <td>
+                                <div className="d-flex flex-column gap-1">
+                                  {getStatusBadge(app.status)}
+                                  <small className="text-muted">by {app.approvedBy || 'System'}</small>
+                                </div>
+                              </td>
+                              <td>{getWorkflowStageBadge(app.workflowStage)}</td>
                               <td>
                                 <small className="text-muted">{app.processingTime}</small>
                               </td>
@@ -315,6 +394,15 @@ function ViewApplications() {
                                   >
                                     <i className="bi bi-download"></i>
                                   </button>
+                                  {app.permitCertificateAvailable && (
+                                    <button 
+                                      className="btn btn-success btn-sm"
+                                      onClick={() => handleDownloadCertificate(app)}
+                                      title="Download Permit Certificate"
+                                    >
+                                      <i className="bi bi-award"></i>
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -325,9 +413,6 @@ function ViewApplications() {
                   )}
                 </div>
               </div>
-
-              {/* Application Details Modal would go here in a real implementation */}
-              
             </div>
           </div>
         </div>
