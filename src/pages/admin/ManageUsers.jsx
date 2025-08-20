@@ -1,6 +1,9 @@
+// src/pages/admin/ManageUsers.jsx
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import mockApi from '../../services/mockApi';
+
+const apiBase = 'http://localhost:8080';
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -10,16 +13,23 @@ const ManageUsers = () => {
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const authHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
-      const res = await mockApi.getUsers();
-      setUsers(res.data); // exclude admin
-    } catch (error) {
-      console.error("Error fetching users:", error);
+      const res = await axios.get(`${apiBase}/api/users`, {
+        headers: authHeaders(),
+        params: { page: 0, size: 100 }
+      });
+      setUsers(res.data?.items ?? []);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setError('Failed to load users.');
     }
   };
 
@@ -46,10 +56,10 @@ const ManageUsers = () => {
       await navigator.clipboard.writeText(`Email: ${form.email}\nPassword: ${form.password}`);
       setSuccess('Credentials copied to clipboard.');
       setTimeout(() => setSuccess(''), 2000);
-    } catch {
-      // ignore
-    }
+    } catch {}
   };
+
+  const normalizeRole = (r) => (r || '').trim().toUpperCase().replace('-', '_');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,49 +69,67 @@ const ManageUsers = () => {
     if (!form.username || !form.email || !form.role || (!editId && !form.password)) {
       return setError('All fields are required.');
     }
-
     if (!isValidEmail(form.email)) {
       return setError('Invalid email format.');
     }
-
     if (!editId && !isStrongPassword(form.password)) {
-      return setError(
-        'Password must be at least 6 characters with uppercase, lowercase, number, and special character.'
-      );
+      return setError('Password must be at least 6 characters with uppercase, lowercase, number, and special character.');
     }
 
-    const duplicate = users.some(u => u.email === form.email && u.id !== editId);
+    const duplicate = users.some(u => u.email?.toLowerCase() === form.email.toLowerCase() && u.id !== editId);
     if (duplicate) return setError("Email already exists!");
 
     try {
       if (editId) {
-        const updatedForm = { ...form };
-        if (!form.password) delete updatedForm.password;
-        // Mock update - in real app this would update the user
+        const body = {
+          username: form.username,
+          email: form.email,
+          role: normalizeRole(form.role)
+        };
+        await axios.put(`${apiBase}/api/users/${editId}`, body, { headers: authHeaders() });
+
+        // Optional password reset when provided
+        if (form.password) {
+          await axios.post(`${apiBase}/api/users/${editId}/reset-password`, { newPassword: form.password }, { headers: authHeaders() });
+        }
+
         setEditId(null);
         setSuccess('User updated.');
       } else {
-        await mockApi.createUser(form);
+        const body = {
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          role: form.role // AuthService will normalize
+        };
+        await axios.post(`${apiBase}/api/users`, body, { headers: authHeaders() });
         setSuccess('User created. Share the credentials below.');
       }
 
-      fetchUsers();
+      await fetchUsers();
+      if (!editId) {
+        // keep password visible for sharing
+      } else {
+        handleResetForm();
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save user.');
     }
   };
 
   const handleEdit = (user) => {
-    setForm({ username: user.username, email: user.email, password: '', role: user.role });
+    setForm({ username: user.username || '', email: user.email || '', password: '', role: (user.role || 'OWNER').toLowerCase().replace('_','-') });
     setEditId(user.id);
     setError('');
     setSuccess('');
+    setShowPassword(false);
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm('Delete this user?')) return;
     try {
-      // Mock delete - in real app this would delete the user
-      fetchUsers();
+      await axios.delete(`${apiBase}/api/users/${id}`, { headers: authHeaders() });
+      await fetchUsers();
     } catch {
       alert("Failed to delete user.");
     }
@@ -182,6 +210,7 @@ const ManageUsers = () => {
             <option value="consultant">Consultant</option>
             <option value="engineer">Engineer</option>
             <option value="government-board">Government Board</option>
+            <option value="admin">Admin</option>
           </select>
         </div>
 
@@ -198,12 +227,8 @@ const ManageUsers = () => {
           <button type="button" className="btn btn-secondary btn-sm" onClick={handleResetForm}>Reset</button>
         </div>
 
-        {error && (
-          <div className="col-12 text-danger small mt-1">{error}</div>
-        )}
-        {success && (
-          <div className="col-12 text-success small mt-1">{success}</div>
-        )}
+        {error && <div className="col-12 text-danger small mt-1">{error}</div>}
+        {success && <div className="col-12 text-success small mt-1">{success}</div>}
       </form>
 
       {!editId && form.email && form.password && (
@@ -221,7 +246,7 @@ const ManageUsers = () => {
             <th>Username</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Actions</th>
+            <th style={{width: 160}}>Actions</th>
           </tr>
         </thead>
         <tbody>

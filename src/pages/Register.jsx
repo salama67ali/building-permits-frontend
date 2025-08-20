@@ -6,17 +6,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    firstName: '',
-    lastName: '',
     phoneNumber: '',
     address: '',
-    companyName: '',
-    licenseNumber: '',
-    experience: ''
+    
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -35,7 +33,7 @@ function Register() {
     setError('');
     setSuccess('');
 
-    const { username, email, password, confirmPassword, firstName, lastName, phoneNumber, address, companyName, licenseNumber, experience } = formData;
+    const { firstName, lastName, username, email, password, confirmPassword, phoneNumber, address } = formData;
 
     // Validation
     if (!username || !email || !password || !confirmPassword || !firstName || !lastName || !phoneNumber || !address) {
@@ -72,17 +70,16 @@ function Register() {
 
       setSuccess(res.data.message || 'Registration successful! You can now login.');
       
-      // Clear form
+      // Clear form (ordered like the UI)
       setFormData({
+        firstName: '',
+        lastName: '',
         username: '',
         email: '',
         password: '',
         confirmPassword: '',
-        firstName: '',
-        lastName: '',
         phoneNumber: '',
         address: '',
-      
       });
 
       // Redirect to login after 2 seconds

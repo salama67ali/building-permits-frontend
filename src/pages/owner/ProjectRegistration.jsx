@@ -1,16 +1,22 @@
+// src/pages/owner/ProjectRegistration.jsx
 import React, { useState } from 'react';
+import axios from 'axios';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
-import { createProject } from '../../services/api';
+
+const API_BASE = 'http://localhost:8080';
 
 function ProjectRegistration() {
-  const userId = localStorage.getItem('currentUserId');
+  const ownerId = Number(localStorage.getItem('currentUserId'));
   const username = localStorage.getItem('currentUserUsername');
 
   const [form, setForm] = useState({
     projectName: '',
     description: '',
     address: '',
+    city: '',
+    state: '',
+    zipCode: '',
     areaName: '',
     coordinateFormat: 'latlng',
     coordinatesText: '',
@@ -21,17 +27,20 @@ function ProjectRegistration() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
-  const [assessmentStep, setAssessmentStep] = useState('form'); // 'form', 'assessing', 'results'
+  const [assessmentStep, setAssessmentStep] = useState('form'); // 'form' | 'assessing' | 'results'
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const authHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  // Mock GIS Assessment function - simulates environmental impact analysis
+  const handleChange = (e) => {
+    setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+  };
+
+  // Mock GIS Assessment function - front-end only
   const performGISAssessment = (coordinates, projectType, buildingHeight, plotSize) => {
-    // Parse coordinates to get center point for assessment
     let centerLat, centerLng;
-    
     if (form.coordinateFormat === 'latlng') {
       const lines = coordinates.split('\n').filter(line => line.trim());
       if (lines.length > 0) {
@@ -40,84 +49,73 @@ function ProjectRegistration() {
         centerLng = lng;
       }
     }
-    
-    // Simulate environmental risk assessment based on coordinates
     const risks = [];
     const assessmentId = `GIS-${Date.now()}`;
-    
-    // Flood Risk Assessment (based on elevation simulation)
+
     const floodRisk = centerLat && centerLat < -1.0 ? 'high' : centerLat < 0 ? 'moderate' : 'low';
     risks.push({
       type: 'Flood Risk',
       level: floodRisk,
-      impact: floodRisk === 'high' ? 'High probability of flooding during rainy seasons' : 
+      impact: floodRisk === 'high' ? 'High probability of flooding during rainy seasons' :
               floodRisk === 'moderate' ? 'Moderate flood risk, drainage required' : 'Low flood risk',
-      mitigation: floodRisk === 'high' ? 'Elevated foundation, proper drainage system required' : 
+      mitigation: floodRisk === 'high' ? 'Elevated foundation, proper drainage system required' :
                   floodRisk === 'moderate' ? 'Install adequate drainage systems' : 'Standard construction practices sufficient'
     });
-    
-    // Erosion Risk Assessment
+
     const erosionRisk = Math.abs(centerLng) > 35 ? 'high' : Math.abs(centerLng) > 34 ? 'moderate' : 'low';
     risks.push({
       type: 'Soil Erosion',
       level: erosionRisk,
-      impact: erosionRisk === 'high' ? 'High risk of soil erosion and landslides' : 
+      impact: erosionRisk === 'high' ? 'High risk of soil erosion and landslides' :
               erosionRisk === 'moderate' ? 'Moderate erosion risk on slopes' : 'Minimal erosion risk',
-      mitigation: erosionRisk === 'high' ? 'Terracing, retaining walls, and vegetation cover required' : 
+      mitigation: erosionRisk === 'high' ? 'Terracing, retaining walls, and vegetation cover required' :
                   erosionRisk === 'moderate' ? 'Slope stabilization recommended' : 'Standard soil conservation practices'
     });
-    
-    // Seismic/Earthquake Risk Assessment
+
     const seismicRisk = centerLat && Math.abs(centerLat + 1) < 2 ? 'high' : 'moderate';
     risks.push({
       type: 'Seismic Activity',
       level: seismicRisk,
-      impact: seismicRisk === 'high' ? 'High earthquake risk zone - special construction required' : 
+      impact: seismicRisk === 'high' ? 'High earthquake risk zone - special construction required' :
               'Moderate seismic activity possible',
-      mitigation: seismicRisk === 'high' ? 'Earthquake-resistant design, reinforced foundation required' : 
+      mitigation: seismicRisk === 'high' ? 'Earthquake-resistant design, reinforced foundation required' :
                   'Standard seismic building codes compliance'
     });
-    
-    // Volcanic Risk Assessment
+
     const volcanicRisk = centerLat && centerLat > -2 && centerLat < 2 && Math.abs(centerLng - 37) < 3 ? 'moderate' : 'low';
     risks.push({
       type: 'Volcanic Activity',
       level: volcanicRisk,
-      impact: volcanicRisk === 'moderate' ? 'Located near volcanic region - ash fall possible' : 
-              'Low volcanic risk',
-      mitigation: volcanicRisk === 'moderate' ? 'Ash-resistant roofing, air filtration systems recommended' : 
+      impact: volcanicRisk === 'moderate' ? 'Located near volcanic region - ash fall possible' : 'Low volcanic risk',
+      mitigation: volcanicRisk === 'moderate' ? 'Ash-resistant roofing, air filtration systems recommended' :
                   'No special volcanic precautions required'
     });
-    
-    // Environmental Impact Assessment
-    const environmentalImpact = projectType === 'industrial' ? 'high' : 
-                               projectType === 'commercial' ? 'moderate' : 'low';
+
+    const environmentalImpact = projectType === 'industrial' ? 'high' :
+                                projectType === 'commercial' ? 'moderate' : 'low';
     risks.push({
       type: 'Environmental Impact',
       level: environmentalImpact,
-      impact: environmentalImpact === 'high' ? 'Significant environmental impact expected' : 
-              environmentalImpact === 'moderate' ? 'Moderate environmental considerations' : 
+      impact: environmentalImpact === 'high' ? 'Significant environmental impact expected' :
+              environmentalImpact === 'moderate' ? 'Moderate environmental considerations' :
               'Minimal environmental impact',
-      mitigation: environmentalImpact === 'high' ? 'Environmental Impact Assessment (EIA) required, waste management plan needed' : 
-                  environmentalImpact === 'moderate' ? 'Environmental monitoring recommended' : 
+      mitigation: environmentalImpact === 'high' ? 'EIA required, waste management plan needed' :
+                  environmentalImpact === 'moderate' ? 'Environmental monitoring recommended' :
                   'Standard environmental practices sufficient'
     });
-    
-    // Overall Risk Assessment
+
     const highRisks = risks.filter(r => r.level === 'high').length;
     const moderateRisks = risks.filter(r => r.level === 'moderate').length;
-    
-    const overallRisk = highRisks > 2 ? 'high' : 
-                       highRisks > 0 || moderateRisks > 3 ? 'moderate' : 'low';
-    
+    const overallRisk = highRisks > 2 ? 'high' : (highRisks > 0 || moderateRisks > 3) ? 'moderate' : 'low';
+
     return {
       assessmentId,
       coordinates: { lat: centerLat, lng: centerLng },
       overallRisk,
       risks,
       recommendations: {
-        approval: overallRisk === 'low' ? 'recommended' : 
-                 overallRisk === 'moderate' ? 'conditional' : 'requires_detailed_study',
+        approval: overallRisk === 'low' ? 'recommended' :
+                  overallRisk === 'moderate' ? 'conditional' : 'requires_detailed_study',
         conditions: overallRisk === 'high' ? [
           'Detailed geological survey required',
           'Environmental Impact Assessment (EIA) mandatory',
@@ -144,38 +142,57 @@ function ProjectRegistration() {
     setAssessmentStep('assessing');
 
     try {
-      // Validate coordinates
-      if (!form.coordinatesText.trim()) {
-        throw new Error('Please provide project coordinates');
+      if (!ownerId) throw new Error('Owner is not logged in.');
+      if (!form.projectName.trim()) throw new Error('Project name is required.');
+      if (!form.projectType.trim()) throw new Error('Project type is required.');
+      if (!form.address.trim() || !form.city.trim() || !form.state.trim() || !form.zipCode.trim()) {
+        throw new Error('Address, city, state, and zip code are required.');
       }
+      if (!form.coordinatesText.trim()) throw new Error('Please provide project coordinates.');
 
-      // Simulate assessment delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Perform GIS Assessment
+      // Simulate GIS assessment delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       const gisAssessment = performGISAssessment(
-        form.coordinatesText, 
-        form.projectType, 
-        form.buildingHeight, 
+        form.coordinatesText,
+        form.projectType,
+        form.buildingHeight,
         form.plotSize
       );
-      
-      const projectId = `PRJ-${Date.now()}`;
+
+      // Create project in backend
+      // Backend ProjectController expects a Project entity; include owner via nested object { id: ownerId }
+      const payload = {
+        projectName: form.projectName,
+        projectType: form.projectType,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        zipCode: form.zipCode,
+        description: form.description,
+        owner: { id: ownerId }
+      };
+
+      const { data } = await axios.post(
+        `${API_BASE}/api/projects`,
+        payload,
+        { headers: { ...authHeaders(), 'Content-Type': 'application/json' } }
+      );
+
       const assessmentResult = {
-        projectId,
-        status: 'assessment_completed',
+        projectId: data?.id ?? `PRJ-${Date.now()}`,
+        status: data?.status ?? 'pending',
         projectDetails: {
-          name: form.projectName,
-          type: form.projectType,
-          address: form.address,
+          name: data?.projectName ?? form.projectName,
+          type: data?.projectType ?? form.projectType,
+          address: data?.address ?? form.address,
           areaName: form.areaName,
           coordinates: form.coordinatesText
         },
         gisAssessment,
         nextSteps: {
           requiresEIA: gisAssessment.overallRisk === 'high',
-          estimatedProcessingTime: gisAssessment.overallRisk === 'high' ? '45-60 days' : 
-                                  gisAssessment.overallRisk === 'moderate' ? '30-45 days' : '15-30 days',
+          estimatedProcessingTime: gisAssessment.overallRisk === 'high' ? '45-60 days' :
+                                   gisAssessment.overallRisk === 'moderate' ? '30-45 days' : '15-30 days',
           requiredDocuments: [
             'Detailed architectural plans',
             'Structural engineering drawings',
@@ -184,12 +201,11 @@ function ProjectRegistration() {
           ]
         }
       };
-      
+
       setResult(assessmentResult);
       setAssessmentStep('results');
-      
     } catch (e1) {
-      setError(e1.message);
+      setError(e1?.response?.data?.message || e1.message || 'Failed to register project.');
       setAssessmentStep('form');
     } finally {
       setSubmitting(false);
@@ -215,6 +231,7 @@ function ProjectRegistration() {
                     <label className="form-label">Area Name *</label>
                     <input name="areaName" className="form-control" value={form.areaName} onChange={handleChange} required />
                   </div>
+
                   <div className="col-md-6">
                     <label className="form-label">Project Type *</label>
                     <select name="projectType" className="form-select" value={form.projectType} onChange={handleChange} required>
@@ -233,22 +250,36 @@ function ProjectRegistration() {
                     <label className="form-label">Plot Size (m²)</label>
                     <input name="plotSize" type="number" className="form-control" value={form.plotSize} onChange={handleChange} placeholder="e.g., 500" />
                   </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">City *</label>
+                    <input name="city" className="form-control" value={form.city} onChange={handleChange} required />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label">State/Region *</label>
+                    <input name="state" className="form-control" value={form.state} onChange={handleChange} required />
+                  </div>
+                  <div className="col-md-3">
+                    <label className="form-label">ZIP/Postal Code *</label>
+                    <input name="zipCode" className="form-control" value={form.zipCode} onChange={handleChange} required />
+                  </div>
+
                   <div className="col-12">
                     <label className="form-label">Address</label>
-                    <input name="address" className="form-control" value={form.address} onChange={handleChange} placeholder="Street address, city, region" />
+                    <input name="address" className="form-control" value={form.address} onChange={handleChange} placeholder="Street address" />
                   </div>
                   <div className="col-12">
                     <label className="form-label">Project Description</label>
                     <textarea name="description" className="form-control" rows={3} value={form.description} onChange={handleChange} placeholder="Describe your construction project..." />
                   </div>
-                  
+
                   <div className="col-12">
                     <div className="alert alert-info">
                       <h6><i className="bi bi-info-circle"></i> Location Coordinates Required for Environmental Assessment</h6>
-                      <p className="mb-0">Please provide the exact coordinates of your construction site. This information will be used to assess environmental and social impacts including flood risk, soil erosion, seismic activity, and volcanic hazards.</p>
+                      <p className="mb-0">Provide site coordinates for assessment (flood, erosion, seismic, volcano, etc.).</p>
                     </div>
                   </div>
-                  
+
                   <div className="col-md-4">
                     <label className="form-label">Coordinate Format *</label>
                     <select name="coordinateFormat" className="form-select" value={form.coordinateFormat} onChange={handleChange}>
@@ -275,23 +306,24 @@ function ProjectRegistration() {
                       required
                     />
                     <div className="form-text">
-                      {form.coordinateFormat === 'latlng' && 'Enter latitude,longitude pairs (one per line) to define your project boundary'}
+                      {form.coordinateFormat === 'latlng' && 'Enter latitude,longitude pairs (one per line)'}
                       {form.coordinateFormat === 'geojson' && 'Enter valid GeoJSON polygon geometry'}
-                      {form.coordinateFormat === 'wkt' && 'Enter Well-Known Text (WKT) polygon format'}
+                      {form.coordinateFormat === 'wkt' && 'Enter Well-Known Text (WKT) polygon'}
                     </div>
                   </div>
                 </div>
+
                 {error && <div className="text-danger mt-2">{error}</div>}
+
                 <div className="mt-3">
                   <button className="btn btn-primary" disabled={submitting} type="submit">
-                    {submitting ? 'Submitting...' : 'Submit for GIS Assessment'}
+                    {submitting ? 'Submitting...' : 'Submit for GIS Assessment & Register'}
                   </button>
                 </div>
               </form>
             </div>
           </div>
 
-          {/* Assessment Progress */}
           {assessmentStep === 'assessing' && (
             <div className="card mt-3">
               <div className="card-header">
@@ -302,7 +334,6 @@ function ProjectRegistration() {
                   <span className="visually-hidden">Loading...</span>
                 </div>
                 <h5>Analyzing Environmental Impacts...</h5>
-                <p className="text-muted">Assessing flood risk, soil erosion, seismic activity, volcanic hazards, and environmental impacts based on your project coordinates.</p>
                 <div className="progress mb-3">
                   <div className="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style={{width: '75%'}}></div>
                 </div>
@@ -311,14 +342,12 @@ function ProjectRegistration() {
             </div>
           )}
 
-          {/* Assessment Results */}
           {result && assessmentStep === 'results' && (
             <div className="card mt-3">
               <div className="card-header bg-success text-white">
-                <i className="bi bi-check-circle"></i> Environmental & Social Impact Assessment Complete
+                <i className="bi bi-check-circle"></i> Assessment Complete & Project Registered
               </div>
               <div className="card-body">
-                {/* Project Summary */}
                 <div className="row mb-4">
                   <div className="col-md-6">
                     <h6>Project Information</h6>
@@ -326,6 +355,7 @@ function ProjectRegistration() {
                     <p><strong>Project Name:</strong> {result.projectDetails.name}</p>
                     <p><strong>Type:</strong> {result.projectDetails.type}</p>
                     <p><strong>Location:</strong> {result.projectDetails.areaName}</p>
+                    <p><strong>Status:</strong> {result.status}</p>
                   </div>
                   <div className="col-md-6">
                     <h6>Assessment Details</h6>
@@ -335,10 +365,8 @@ function ProjectRegistration() {
                   </div>
                 </div>
 
-                {/* Overall Risk Assessment */}
-                <div className="alert alert-{result.gisAssessment.overallRisk === 'low' ? 'success' : result.gisAssessment.overallRisk === 'moderate' ? 'warning' : 'danger'} mb-4">
+                <div className={`alert alert-${result.gisAssessment.overallRisk === 'low' ? 'success' : result.gisAssessment.overallRisk === 'moderate' ? 'warning' : 'danger'} mb-4`}>
                   <h5 className="alert-heading">
-                    <i className="bi bi-{result.gisAssessment.overallRisk === 'low' ? 'check-circle' : result.gisAssessment.overallRisk === 'moderate' ? 'exclamation-triangle' : 'x-circle'}"></i>
                     Overall Risk Level: {result.gisAssessment.overallRisk.toUpperCase()}
                   </h5>
                   <p className="mb-0">
@@ -346,13 +374,12 @@ function ProjectRegistration() {
                   </p>
                 </div>
 
-                {/* Environmental Impact Details */}
                 <h6>Environmental & Social Impact Analysis</h6>
                 <div className="row">
                   {result.gisAssessment.risks.map((risk, idx) => (
                     <div key={idx} className="col-md-6 mb-3">
                       <div className="card h-100">
-                        <div className="card-header bg-{risk.level === 'low' ? 'success' : risk.level === 'moderate' ? 'warning' : 'danger'} text-white">
+                        <div className={`card-header text-white bg-${risk.level === 'low' ? 'success' : risk.level === 'moderate' ? 'warning' : 'danger'}`}>
                           <strong>{risk.type}</strong>
                           <span className="badge bg-light text-dark float-end">{risk.level.toUpperCase()}</span>
                         </div>
@@ -365,20 +392,17 @@ function ProjectRegistration() {
                   ))}
                 </div>
 
-                {/* Recommendations & Conditions */}
                 <div className="mt-4">
                   <h6>Approval Conditions & Requirements</h6>
                   <ul className="list-group">
-                    {result.gisAssessment.recommendations.conditions.map((condition, idx) => (
+                    {result.gisAssessment.recommendations.conditions.map((c, idx) => (
                       <li key={idx} className="list-group-item">
-                        <i className="bi bi-check-square text-primary me-2"></i>
-                        {condition}
+                        <i className="bi bi-check-square text-primary me-2"></i>{c}
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Next Steps */}
                 <div className="mt-4">
                   <h6>Next Steps & Processing Information</h6>
                   <div className="row">
@@ -387,9 +411,7 @@ function ProjectRegistration() {
                         <div className="card-body">
                           <h6>Required Documents</h6>
                           <ul className="mb-0">
-                            {result.nextSteps.requiredDocuments.map((doc, idx) => (
-                              <li key={idx}>{doc}</li>
-                            ))}
+                            {result.nextSteps.requiredDocuments.map((doc, idx) => (<li key={idx}>{doc}</li>))}
                           </ul>
                         </div>
                       </div>
@@ -400,18 +422,14 @@ function ProjectRegistration() {
                           <h6>Processing Timeline</h6>
                           <p><strong>Estimated Time:</strong> {result.nextSteps.estimatedProcessingTime}</p>
                           <p><strong>EIA Required:</strong> {result.nextSteps.requiresEIA ? 'Yes' : 'No'}</p>
-                          {result.nextSteps.requiresEIA && (
-                            <small className="text-muted">Environmental Impact Assessment will add additional processing time</small>
-                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Download Report Button */}
                 <div className="mt-4 text-center">
-                  <button 
+                  <button
                     className="btn btn-outline-primary me-2"
                     onClick={() => {
                       const reportData = JSON.stringify(result, null, 2);
@@ -426,7 +444,7 @@ function ProjectRegistration() {
                   >
                     <i className="bi bi-download"></i> Download GIS Assessment Report
                   </button>
-                  <button 
+                  <button
                     className="btn btn-primary"
                     onClick={() => {
                       setResult(null);
@@ -435,6 +453,9 @@ function ProjectRegistration() {
                         projectName: '',
                         description: '',
                         address: '',
+                        city: '',
+                        state: '',
+                        zipCode: '',
                         areaName: '',
                         coordinateFormat: 'latlng',
                         coordinatesText: '',
@@ -451,9 +472,7 @@ function ProjectRegistration() {
                 <div className="alert alert-info mt-4">
                   <h6><i className="bi bi-info-circle"></i> What Happens Next?</h6>
                   <p className="mb-0">
-                    Your project registration and environmental assessment have been completed. 
-                    The application will now be forwarded to the relevant government boards for review. 
-                    You will be notified of the approval status and any additional requirements.
+                    Your project has been registered and will proceed to review. You’ll receive notifications as the status changes.
                   </p>
                 </div>
               </div>

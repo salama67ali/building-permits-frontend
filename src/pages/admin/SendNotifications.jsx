@@ -1,33 +1,83 @@
+// src/pages/admin/SendNotifications.jsx
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const apiBase = 'http://localhost:8080';
+
 function SendNotifications() {
   const navigate = useNavigate();
   const username = localStorage.getItem('currentUserUsername');
+
   const [notification, setNotification] = useState({
     recipient: '',
     subject: '',
     message: '',
-    type: 'info'
+    type: 'info',
+    email: '' // optional: send to specific email
   });
   const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null); // backend response
+
+  const authHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const handleChange = (e) => {
     setNotification({ ...notification, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const mapRecipientToPayload = (recipient) => {
+    switch (recipient) {
+      case 'all-owners': return { role: 'OWNER' };
+      case 'all-consultants': return { role: 'CONSULTANT' };
+      case 'all-engineers': return { role: 'ENGINEER' };
+      case 'all-government': return { role: 'GOVERNMENT_BOARD' };
+      case 'all-users': default: return {}; // no role/email -> all users
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Notification sent successfully!');
-    // Reset form
-    setNotification({
-      recipient: '',
-      subject: '',
-      message: '',
-      type: 'info'
-    });
+    setStatus('');
+    setError('');
+    setResult(null);
+
+    const subject = notification.subject.trim();
+    const message = notification.message.trim();
+    const email = notification.email.trim();
+
+    if (!subject || !message) {
+      setError('Subject and message are required.');
+      return;
+    }
+
+    try {
+      setSending(true);
+      // If email provided, backend prioritizes email over role
+      const body = email
+        ? { subject, message, email }
+        : { subject, message, ...mapRecipientToPayload(notification.recipient) };
+
+      const { data } = await axios.post(
+        `${apiBase}/api/admin/notifications`,
+        body,
+        { headers: { ...authHeaders(), 'Content-Type': 'application/json' } }
+      );
+
+      setResult(data);
+      setStatus('Notification sent successfully!');
+      setNotification({ recipient: '', subject: '', message: '', type: 'info', email: '' });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send notification.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -66,6 +116,7 @@ function SendNotifications() {
           </div>
 
           {status && <div className="alert alert-success">{status}</div>}
+          {error && <div className="alert alert-danger">{error}</div>}
 
           <div className="card">
             <div className="card-header">
@@ -75,21 +126,23 @@ function SendNotifications() {
               <form onSubmit={handleSubmit}>
                 <div className="row mb-3">
                   <div className="col-md-6">
-                    <label className="form-label">Recipient</label>
+                    <label className="form-label">Recipient Group</label>
                     <select 
                       className="form-select" 
                       name="recipient" 
                       value={notification.recipient} 
                       onChange={handleChange}
-                      required
                     >
-                      <option value="">Select Recipient</option>
+                      <option value="">All Users</option>
                       <option value="all-owners">All Owners</option>
                       <option value="all-consultants">All Consultants</option>
                       <option value="all-engineers">All Engineers</option>
                       <option value="all-government">All Government Boards</option>
                       <option value="all-users">All Users</option>
                     </select>
+                    <div className="form-text">
+                      If you provide a specific email below, it will override the group.
+                    </div>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label">Notification Type</label>
@@ -105,6 +158,18 @@ function SendNotifications() {
                       <option value="urgent">Urgent</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Specific Email (optional)</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    name="email"
+                    placeholder="user@example.com"
+                    value={notification.email}
+                    onChange={handleChange}
+                  />
                 </div>
 
                 <div className="mb-3">
@@ -132,10 +197,24 @@ function SendNotifications() {
                 </div>
 
                 <div className="d-flex gap-2">
-                  <button type="submit" className="btn btn-primary">
-                    <i className="bi bi-send me-2"></i>Send Notification
+                  <button type="submit" className="btn btn-primary" disabled={sending}>
+                    {sending ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-send me-2"></i>Send Notification
+                      </>
+                    )}
                   </button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setNotification({recipient: '', subject: '', message: '', type: 'info'})}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => { setNotification({recipient: '', subject: '', message: '', type: 'info', email: ''}); setStatus(''); setError(''); setResult(null); }}
+                    disabled={sending}
+                  >
                     Clear Form
                   </button>
                 </div>
@@ -143,7 +222,25 @@ function SendNotifications() {
             </div>
           </div>
 
-          {/* Recent Notifications */}
+          {result && (
+            <div className="card mt-3">
+              <div className="card-body">
+                <div className="mb-1"><strong>Backend Response:</strong></div>
+                <div className="small text-muted">Message: {result.message}</div>
+                {'count' in result && <div className="small text-muted">Recipients: {result.count}</div>}
+                {Array.isArray(result.recipients) && result.recipients.length > 0 && (
+                  <div className="mt-2">
+                    <div className="small fw-semibold mb-1">Recipient Emails:</div>
+                    <ul className="small">
+                      {result.recipients.map((r,i) => <li key={i}>{r}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Notifications (static examples) */}
           <div className="card mt-4">
             <div className="card-header">
               <h5>Recent Notifications</h5>
@@ -187,6 +284,7 @@ function SendNotifications() {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

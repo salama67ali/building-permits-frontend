@@ -1,16 +1,58 @@
-import React, { useState } from 'react';
+// src/pages/admin/ViewSubmissions.jsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const apiBase = 'http://localhost:8080';
+
 function ViewSubmissions() {
   const navigate = useNavigate();
   const username = localStorage.getItem('currentUserUsername');
-  const [submissions] = useState([
-    { id: 'BP-2024-001', projectName: 'Residential Building', owner: 'John Doe', status: 'Pending', date: '2024-01-15' },
-    { id: 'BP-2024-002', projectName: 'Commercial Complex', owner: 'ABC Corp', status: 'Approved', date: '2024-01-10' },
-    { id: 'BP-2024-003', projectName: 'Industrial Warehouse', owner: 'XYZ Ltd', status: 'Under Review', date: '2024-01-20' }
-  ]);
+
+  const [statuses, setStatuses] = useState([]);
+  const [page, setPage] = useState(0);
+  const size = 10;
+  const [loading, setLoading] = useState(false);
+  const [actionMsg, setActionMsg] = useState('');
+
+  const authHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const loadStatuses = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${apiBase}/api/admin/permission-status`, {
+        headers: authHeaders(),
+        params: { page, size }
+      });
+      setStatuses(data.items ?? []);
+    } catch {
+      // silently ignore for now
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadStatuses(); }, [page]);
+
+  const updateStatus = async (projectId, newStatus) => {
+    try {
+      await axios.put(`${apiBase}/api/projects/${projectId}/status`, null, {
+        headers: authHeaders(),
+        params: { status: newStatus }
+      });
+      setActionMsg(`Project ${projectId} set to ${newStatus}.`);
+      setTimeout(() => setActionMsg(''), 2000);
+      loadStatuses();
+    } catch {
+      setActionMsg('Failed to update status.');
+      setTimeout(() => setActionMsg(''), 2000);
+    }
+  };
 
   return (
     <div className="d-flex flex-column flex-md-row">
@@ -47,51 +89,72 @@ function ViewSubmissions() {
             </button>
           </div>
 
+          {actionMsg && <div className="alert alert-info py-2">{actionMsg}</div>}
+
           <div className="card">
-            <div className="card-header">
-              <h5>All Application Submissions</h5>
-            </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Permit ID</th>
-                      <th>Project Name</th>
-                      <th>Owner</th>
-                      <th>Status</th>
-                      <th>Submission Date</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {submissions.map((submission) => (
-                      <tr key={submission.id}>
-                        <td>{submission.id}</td>
-                        <td>{submission.projectName}</td>
-                        <td>{submission.owner}</td>
-                        <td>
-                          <span className={`badge ${
-                            submission.status === 'Approved' ? 'bg-success' :
-                            submission.status === 'Pending' ? 'bg-warning' :
-                            'bg-info'
-                          }`}>
-                            {submission.status}
-                          </span>
-                        </td>
-                        <td>{submission.date}</td>
-                        <td>
-                          <button className="btn btn-sm btn-outline-primary me-1">View</button>
-                          <button className="btn btn-sm btn-outline-success me-1">Approve</button>
-                          <button className="btn btn-sm btn-outline-danger">Reject</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="card-header d-flex justify-content-between">
+              <h5 className="mb-0">All Application Submissions</h5>
+              <div>
+                <button
+                  className="btn btn-sm btn-outline-secondary me-2"
+                  disabled={page<=0}
+                  onClick={()=>setPage(p=>p-1)}
+                >
+                  Prev
+                </button>
+                <button
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={()=>setPage(p=>p+1)}
+                >
+                  Next
+                </button>
               </div>
             </div>
+            <div className="card-body">
+              {loading ? (
+                <div className="text-center text-muted">Loading...</div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Project ID</th>
+                        <th>Project Name</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Approved</th>
+                        <th>Completed</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {statuses.length ? statuses.map((s) => (
+                        <tr key={s.projectId}>
+                          <td>{s.projectId}</td>
+                          <td>{s.projectName}</td>
+                          <td>
+                            <span className="badge bg-secondary">{s.status}</span>
+                          </td>
+                          <td>{s.submissionDate ? new Date(s.submissionDate).toLocaleString() : '-'}</td>
+                          <td>{s.approvalDate ? new Date(s.approvalDate).toLocaleString() : '-'}</td>
+                          <td>{s.completionDate ? new Date(s.completionDate).toLocaleString() : '-'}</td>
+                          <td>
+                            <button className="btn btn-sm btn-outline-success me-1" onClick={() => updateStatus(s.projectId, 'approved')}>Approve</button>
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => updateStatus(s.projectId, 'rejected')}>Reject</button>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr>
+                          <td colSpan="7" className="text-center text-muted">No submissions.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
+
         </div>
       </div>
     </div>

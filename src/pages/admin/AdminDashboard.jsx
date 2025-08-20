@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from "../../components/Sidebar";
 import Header from "../../components/Header";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -20,18 +19,31 @@ function AdminDashboard() {
   });
 
   useEffect(() => {
-    // Mock data - in real app this would come from API
-    setStats({
-    totalUsers: 156,
-    totalOwners: 89,
-    totalConsultants: 23,
-    totalEngineers: 18,
-    totalGovernmentBoards: 26,
-    pendingApplications: 45,
-    approvedApplications: 234,
-    rejectedApplications: 12
-  });
+    const token = localStorage.getItem('authToken');
+    axios.get('http://localhost:8080/api/admin/stats', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    .then(({ data }) => {
+      setStats({
+        totalUsers: data.totalUsers ?? 0,
+        totalOwners: data.totalOwners ?? 0,
+        totalConsultants: data.totalConsultants ?? 0,
+        totalEngineers: data.totalEngineers ?? 0,
+        totalGovernmentBoards: data.totalGovernmentBoards ?? 0,
+        pendingApplications: data.pendingApplications ?? 0,
+        approvedApplications: data.approvedApplications ?? 0,
+        rejectedApplications: data.rejectedApplications ?? 0
+      });
+    })
+    .catch(() => {
+      // Optionally handle error/toast
+    });
   }, []);
+
+  const pct = (part, whole) => {
+    if (!whole || whole <= 0) return 0;
+    return Math.min(100, Math.max(0, (part / whole) * 100));
+  };
 
   return (
     <div className="d-flex flex-column flex-md-row">
@@ -46,15 +58,15 @@ function AdminDashboard() {
             <a className="nav-link text-white" onClick={() => navigate('/admin/manage-users')} style={{cursor: 'pointer'}}>
               <i className="bi bi-people me-2"></i>Manage Users
             </a>
-                         <a className="nav-link text-white" onClick={() => navigate('/admin/view-submissions')} style={{cursor: 'pointer'}}>
-               <i className="bi bi-file-earmark-text me-2"></i>Applications
-             </a>
-             <a className="nav-link text-white" onClick={() => navigate('/admin/send-notifications')} style={{cursor: 'pointer'}}>
-               <i className="bi bi-graph-up me-2"></i>Reports
-             </a>
-             <a className="nav-link text-white" href="#settings" style={{cursor: 'pointer'}}>
-               <i className="bi bi-gear me-2"></i>Settings
-             </a>
+            <a className="nav-link text-white" onClick={() => navigate('/admin/view-submissions')} style={{cursor: 'pointer'}}>
+              <i className="bi bi-file-earmark-text me-2"></i>Applications
+            </a>
+            <a className="nav-link text-white" onClick={() => navigate('/admin/send-notifications')} style={{cursor: 'pointer'}}>
+              <i className="bi bi-graph-up me-2"></i>Reports
+            </a>
+            <a className="nav-link text-white" href="#settings" style={{cursor: 'pointer'}}>
+              <i className="bi bi-gear me-2"></i>Settings
+            </a>
           </nav>
         </div>
       </div>
@@ -65,14 +77,14 @@ function AdminDashboard() {
         <Header username={username} />
         
         {/* Dashboard Content */}
-    <div className="p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Admin Dashboard</h2>
-        <div className="text-muted">Welcome back, {username}!</div>
-      </div>
+        <div className="p-4">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h2>Admin Dashboard</h2>
+            <div className="text-muted">Welcome back, {username}!</div>
+          </div>
 
-      {/* Statistics Cards */}
-      <div className="row mb-4">
+          {/* Statistics Cards */}
+          <div className="row mb-4">
             <div className="col-md-3 mb-3">
               <div className="card bg-primary text-white">
                 <div className="card-body">
@@ -105,9 +117,9 @@ function AdminDashboard() {
             </div>
             <div className="col-md-3 mb-3">
               <div className="card bg-info text-white">
-              <div className="card-body">
-                <div className="d-flex justify-content-between">
-                  <div>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between">
+                    <div>
                       <h4>{stats.approvedApplications}</h4>
                       <p className="mb-0">Approved Applications</p>
                     </div>
@@ -125,21 +137,21 @@ function AdminDashboard() {
                     <div>
                       <h4>{stats.rejectedApplications}</h4>
                       <p className="mb-0">Rejected Applications</p>
-                  </div>
-                  <div className="align-self-center">
+                    </div>
+                    <div className="align-self-center">
                       <i className="bi bi-x-circle fs-1"></i>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-      </div>
+          </div>
 
           {/* User Distribution */}
-      <div className="row mb-4">
-        <div className="col-md-6">
-          <div className="card">
-            <div className="card-header">
+          <div className="row mb-4">
+            <div className="col-md-6">
+              <div className="card">
+                <div className="card-header">
                   <h5>User Distribution by Role</h5>
                 </div>
                 <div className="card-body">
@@ -149,7 +161,7 @@ function AdminDashboard() {
                       <span>{stats.totalOwners}</span>
                     </div>
                     <div className="progress">
-                      <div className="progress-bar" style={{ width: `${(stats.totalOwners/stats.totalUsers)*100}%` }}></div>
+                      <div className="progress-bar" style={{ width: `${pct(stats.totalOwners, stats.totalUsers)}%` }}></div>
                     </div>
                   </div>
                   <div className="mb-3">
@@ -158,7 +170,7 @@ function AdminDashboard() {
                       <span>{stats.totalConsultants}</span>
                     </div>
                     <div className="progress">
-                      <div className="progress-bar bg-success" style={{ width: `${(stats.totalConsultants/stats.totalUsers)*100}%` }}></div>
+                      <div className="progress-bar bg-success" style={{ width: `${pct(stats.totalConsultants, stats.totalUsers)}%` }}></div>
                     </div>
                   </div>
                   <div className="mb-3">
@@ -167,7 +179,7 @@ function AdminDashboard() {
                       <span>{stats.totalEngineers}</span>
                     </div>
                     <div className="progress">
-                      <div className="progress-bar bg-info" style={{ width: `${(stats.totalEngineers/stats.totalUsers)*100}%` }}></div>
+                      <div className="progress-bar bg-info" style={{ width: `${pct(stats.totalEngineers, stats.totalUsers)}%` }}></div>
                     </div>
                   </div>
                   <div className="mb-3">
@@ -176,38 +188,40 @@ function AdminDashboard() {
                       <span>{stats.totalGovernmentBoards}</span>
                     </div>
                     <div className="progress">
-                      <div className="progress-bar bg-warning" style={{ width: `${(stats.totalGovernmentBoards/stats.totalUsers)*100}%` }}></div>
+                      <div className="progress-bar bg-warning" style={{ width: `${pct(stats.totalGovernmentBoards, stats.totalUsers)}%` }}></div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Quick Actions */}
             <div className="col-md-6">
               <div className="card">
                 <div className="card-header">
                   <h5>Quick Actions</h5>
-            </div>
-            <div className="card-body">
-              <div className="d-grid gap-2">
-                <button className="btn btn-primary" onClick={() => navigate('/admin/manage-users')}>
-                       <i className="bi bi-person-plus me-2"></i>Manage Users
-                </button>
-                <button className="btn btn-success" onClick={() => navigate('/admin/view-submissions')}>
-                  <i className="bi bi-file-earmark-text me-2"></i>View Applications
-                </button>
-                <button className="btn btn-info" onClick={() => navigate('/admin/send-notifications')}>
-                       <i className="bi bi-graph-up me-2"></i>Generate Report
-                     </button>
-                     <button className="btn btn-warning">
-                       <i className="bi bi-gear me-2"></i>System Settings
-                </button>
-                   </div>
+                </div>
+                <div className="card-body">
+                  <div className="d-grid gap-2">
+                    <button className="btn btn-primary" onClick={() => navigate('/admin/manage-users')}>
+                      <i className="bi bi-person-plus me-2"></i>Manage Users
+                    </button>
+                    <button className="btn btn-success" onClick={() => navigate('/admin/view-submissions')}>
+                      <i className="bi bi-file-earmark-text me-2"></i>View Applications
+                    </button>
+                    <button className="btn btn-info" onClick={() => navigate('/admin/send-notifications')}>
+                      <i className="bi bi-graph-up me-2"></i>Generate Report
+                    </button>
+                    <button className="btn btn-warning">
+                      <i className="bi bi-gear me-2"></i>System Settings
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Recent Activity */}
+          {/* Recent Activity (static placeholders) */}
           <div className="card">
             <div className="card-header">
               <h5>Recent Activity</h5>
@@ -249,8 +263,8 @@ function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </div> {/* p-4 */}
+      </div> {/* flex-grow-1 */}
     </div>
   );
 }

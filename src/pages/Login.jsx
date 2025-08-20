@@ -1,7 +1,10 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import mockApi from '../services/mockApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
+const API_BASE = 'http://localhost:8080';
 
 function Login() {
   const navigate = useNavigate();
@@ -13,9 +16,32 @@ function Login() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+  const validateEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const normalizeRoleForApi = (value) =>
+    value.trim().toUpperCase().replace('-', '_'); // e.g. government-boards -> GOVERNMENT_BOARDS (we will map below)
+
+  // Some UIs use “government-boards” label; backend expects GOVERNMENT_BOARD (singular, underscore)
+  const mapUiRoleToBackend = (value) => {
+    const r = value.trim().toLowerCase();
+    if (r === 'government-boards' || r === 'government-board') return 'GOVERNMENT_BOARD';
+    if (r === 'admin') return 'ADMIN';
+    if (r === 'owner') return 'OWNER';
+    if (r === 'consultant') return 'CONSULTANT';
+    if (r === 'engineer') return 'ENGINEER';
+    // default normalization
+    return normalizeRoleForApi(value);
+  };
+
+  const routeForRole = (backendRole) => {
+    const r = backendRole.toUpperCase();
+    if (r === 'ADMIN') return '/admin';
+    if (r === 'OWNER') return '/owner';
+    if (r === 'CONSULTANT') return '/consultant';
+    if (r === 'ENGINEER') return '/engineer';
+    if (r === 'GOVERNMENT_BOARD') return '/government-boards';
+    return '/';
   };
 
   const handleLogin = async (e) => {
@@ -26,42 +52,31 @@ function Login() {
       setError('All fields are required.');
       return;
     }
+    if (!validateEmail(email)) {
+      setError('Invalid email format.');
+      return;
+    }
 
     try {
-      const response = await mockApi.login({ email, password, role: role.toLowerCase() });
+      const roleForApi = mapUiRoleToBackend(role);
+      const { data } = await axios.post(
+        `${API_BASE}/api/auth/login`,
+        { email, password, role: roleForApi },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
-      // Handle successful login
-      const { role: userRole, userId, username } = response.data;
-      
-      // Store user data in localStorage
-      localStorage.setItem('currentUserRole', userRole);
-      localStorage.setItem('currentUserUsername', username);
-      localStorage.setItem('currentUserEmail', email);
-      localStorage.setItem('currentUserId', userId);
-      
-      // Redirect based on role
-      switch (userRole.toLowerCase()) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'owner':
-          navigate('/owner');
-          break;
-        case 'consultant':
-          navigate('/consultant');
-          break;
-        case 'engineer':
-          navigate('/engineer');
-          break;
-        case 'government-boards':
-          navigate('/government-boards');
-          break;
-        default:
-          navigate('/');
-      }
-      
+      // Backend returns token in data.message.
+      // Note: data.username and data.email are swapped in the backend DTO.
+      // We’ll store both and use role from data.role.
+      localStorage.setItem('authToken', data.message || '');
+      localStorage.setItem('currentUserUsername', data.username || ''); // This will likely be the email
+      localStorage.setItem('currentUserEmail', data.email || '');       // This will likely be the username
+      localStorage.setItem('currentUserRole', data.role || '');
+
+      navigate(routeForRole(data.role || ''));
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const msg = err?.response?.data?.message || 'Login failed. Please check your credentials.';
+      setError(msg);
     }
   };
 
@@ -71,13 +86,8 @@ function Login() {
       setResetMessage('Please enter a valid email address.');
       return;
     }
-
-    try {
-      // Mock password reset - in real app this would send email
-      setResetMessage('Password reset instructions sent to your email.');
-    } catch (err) {
-      setResetMessage('Failed to send reset email.');
-    }
+    // Placeholder; wire to your backend if you implement a real reset endpoint
+    setResetMessage('Password reset instructions sent to your email.');
   };
 
   return (
@@ -153,17 +163,11 @@ function Login() {
           )}
           
           <div className="text-center">
-            <button
-              className="btn btn-link"
-              onClick={() => setShowForgot(!showForgot)}
-            >
+            <button className="btn btn-link" onClick={() => setShowForgot(!showForgot)}>
               {showForgot ? 'Back to Login' : 'Forgot Password?'}
             </button>
             <br />
-            <button
-              className="btn btn-link"
-              onClick={() => navigate('/register')}
-            >
+            <button className="btn btn-link" onClick={() => navigate('/register')}>
               Don't have an account? Register
             </button>
           </div>

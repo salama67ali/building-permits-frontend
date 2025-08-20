@@ -1,55 +1,43 @@
-import React, { useState } from 'react';
+// src/pages/consultant/ViewDocuments.jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const API_BASE = 'http://localhost:8080';
+
 function ViewDocuments() {
   const navigate = useNavigate();
   const username = localStorage.getItem('currentUserUsername');
-  const [documents] = useState([
-    { 
-      id: 'DOC-001', 
-      projectId: 'BP-2024-001', 
-      type: 'Architectural Plans', 
-      status: 'Approved', 
-      uploadDate: '2024-01-15', 
-      size: '2.5 MB',
-      fileName: 'architectural_plans_v2.pdf',
-      fileUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQJQKMC4wNzUgMCAwIDAuMDc1IDAgMCBjbQovRjEgMTIgVGYKNzIgNzIwIFRkCihBcmNoaXRlY3R1cmFsIFBsYW5zKSBUagplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDIwNCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDUKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjI5OAolJUVPRgo='
-    },
-    { 
-      id: 'DOC-002', 
-      projectId: 'BP-2024-002', 
-      type: 'Structural Design', 
-      status: 'Under Review', 
-      uploadDate: '2024-01-18', 
-      size: '4.2 MB',
-      fileName: 'structural_design_v1.dwg',
-      fileUrl: 'data:application/octet-stream;base64,QXV0b0NBRCA='
-    },
-    { 
-      id: 'DOC-003', 
-      projectId: 'BP-2024-003', 
-      type: 'Electrical Plans', 
-      status: 'Pending', 
-      uploadDate: '2024-01-20', 
-      size: '1.8 MB',
-      fileName: 'electrical_plans.pdf',
-      fileUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQJQKMC4wNzUgMCAwIDAuMDc1IDAgMCBjbQovRjEgMTIgVGYKNzIgNzIwIFRkCihFbGVjdHJpY2FsIFBsYW5zKSBUagplbmRzdHJlYW0KZW5kb2JqCnhyZWYKMCA1CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAwMDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDIwNCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDUKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjI5OAolJUVPRgo='
-    },
-    { 
-      id: 'DOC-004', 
-      projectId: 'BP-2024-001', 
-      type: 'HVAC Design', 
-      status: 'Approved', 
-      uploadDate: '2024-01-22', 
-      size: '3.1 MB',
-      fileName: 'hvac_design.pdf',
-      fileUrl: 'data:application/pdf;base64,JVBERi0xLjQKJcfsj6IKNSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA0NAo+PgpzdHJlYW0KQJQKMC4wNzUgMCAwIDAuMDc1IDAgMCBjbQovRjEgMTIgVGYKNzIgNzIwIFRkCihIVkFDIERlc2lnbikgVGoKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyMDQgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA1Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgoyOTgKJSVFT0YK'
-    }
-  ]);
-
+  const consultantId = Number(localStorage.getItem('currentUserId'));
+  
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+
+  const authHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE}/api/documents/consultant/${consultantId}`, { 
+        headers: authHeaders() 
+      });
+      setDocuments(response.data);
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredDocuments = documents.filter(doc => 
     filter === 'all' || doc.status.toLowerCase().replace(' ', '-') === filter
@@ -67,7 +55,7 @@ function ViewDocuments() {
     if (doc.fileUrl) {
       const link = document.createElement('a');
       link.href = doc.fileUrl;
-      link.download = doc.fileName;
+      link.download = doc.fileName || `document_${doc.id}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -77,8 +65,18 @@ function ViewDocuments() {
   };
 
   const handleEdit = (doc) => {
-    alert(`Edit functionality for ${doc.fileName} will be implemented in future updates.`);
+    alert(`Edit functionality for ${doc.fileName || doc.id} will be implemented in future updates.`);
   };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex">
@@ -148,66 +146,71 @@ function ViewDocuments() {
               <h5>Your Documents ({filteredDocuments.length})</h5>
             </div>
             <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Document ID</th>
-                      <th>Project ID</th>
-                      <th>Document Type</th>
-                      <th>Status</th>
-                      <th>Upload Date</th>
-                      <th>File Size</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredDocuments.map((doc) => (
-                      <tr key={doc.id}>
-                        <td>{doc.id}</td>
-                        <td>{doc.projectId}</td>
-                        <td>{doc.type}</td>
-                        <td>
-                          <span className={`badge ${
-                            doc.status === 'Approved' ? 'bg-success' :
-                            doc.status === 'Under Review' ? 'bg-info' :
-                            'bg-warning'
-                          }`}>
-                            {doc.status}
-                          </span>
-                        </td>
-                        <td>{doc.uploadDate}</td>
-                        <td>{doc.size}</td>
-                        <td>
-                          <div className="btn-group" role="group">
-                            <button 
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => handleView(doc)}
-                              title="View document"
-                            >
-                              <i className="bi bi-eye"></i> View
-                            </button>
-                            <button 
-                              className="btn btn-sm btn-outline-success"
-                              onClick={() => handleDownload(doc)}
-                              title="Download document"
-                            >
-                              <i className="bi bi-download"></i> Download
-                            </button>
-                            <button 
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() => handleEdit(doc)}
-                              title="Edit document"
-                            >
-                              <i className="bi bi-pencil"></i> Edit
-                            </button>
-                          </div>
-                        </td>
+              {filteredDocuments.length === 0 ? (
+                <div className="text-center py-4">
+                  <i className="bi bi-folder-x display-1 text-muted"></i>
+                  <p className="text-muted">No documents found</p>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Document ID</th>
+                        <th>Project</th>
+                        <th>Document Type</th>
+                        <th>Status</th>
+                        <th>Upload Date</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {filteredDocuments.map((doc) => (
+                        <tr key={doc.id}>
+                          <td>{doc.id}</td>
+                          <td>{doc.project?.projectName || 'N/A'}</td>
+                          <td>{doc.designType || 'Document'}</td>
+                          <td>
+                            <span className={`badge ${
+                              doc.status === 'APPROVED' ? 'bg-success' :
+                              doc.status === 'UNDER_REVIEW' ? 'bg-info' :
+                              'bg-warning'
+                            }`}>
+                              {doc.status?.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td>{new Date(doc.uploadDate).toLocaleDateString()}</td>
+                          <td>
+                            <div className="btn-group" role="group">
+                              <button 
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => handleView(doc)}
+                                title="View document"
+                              >
+                                <i className="bi bi-eye"></i> View
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() => handleDownload(doc)}
+                                title="Download document"
+                              >
+                                <i className="bi bi-download"></i> Download
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => handleEdit(doc)}
+                                title="Edit document"
+                              >
+                                <i className="bi bi-pencil"></i> Edit
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
 
@@ -216,7 +219,7 @@ function ViewDocuments() {
             <div className="col-md-3">
               <div className="card bg-success text-white">
                 <div className="card-body text-center">
-                  <h4>{documents.filter(d => d.status === 'Approved').length}</h4>
+                  <h4>{documents.filter(d => d.status === 'APPROVED').length}</h4>
                   <p className="mb-0">Approved</p>
                 </div>
               </div>
@@ -224,7 +227,7 @@ function ViewDocuments() {
             <div className="col-md-3">
               <div className="card bg-info text-white">
                 <div className="card-body text-center">
-                  <h4>{documents.filter(d => d.status === 'Under Review').length}</h4>
+                  <h4>{documents.filter(d => d.status === 'UNDER_REVIEW').length}</h4>
                   <p className="mb-0">Under Review</p>
                 </div>
               </div>
@@ -232,7 +235,7 @@ function ViewDocuments() {
             <div className="col-md-3">
               <div className="card bg-warning text-white">
                 <div className="card-body text-center">
-                  <h4>{documents.filter(d => d.status === 'Pending').length}</h4>
+                  <h4>{documents.filter(d => d.status === 'PENDING').length}</h4>
                   <p className="mb-0">Pending</p>
                 </div>
               </div>

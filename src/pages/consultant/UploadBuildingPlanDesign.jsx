@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+// src/pages/consultant/UploadBuildingPlanDesign.jsx
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+const API_BASE = 'http://localhost:8080';
+
 function UploadBuildingPlanDesign() {
   const navigate = useNavigate();
   const username = localStorage.getItem('currentUserUsername');
+  const consultantId = Number(localStorage.getItem('currentUserId'));
+  
+  const [projects, setProjects] = useState([]);
   const [uploadData, setUploadData] = useState({
     projectId: '',
     designType: 'architectural',
@@ -13,6 +20,26 @@ function UploadBuildingPlanDesign() {
     description: ''
   });
   const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const authHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/projects`, { headers: authHeaders() });
+      setProjects(response.data);
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
+  };
 
   const handleChange = (e) => {
     if (e.target.name === 'file') {
@@ -22,19 +49,49 @@ function UploadBuildingPlanDesign() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setStatus('');
+    setError('');
+
     if (!uploadData.file) {
-      setStatus('Please select a file to upload.');
+      setError('Please select a file to upload.');
       return;
     }
-    setStatus('Building plan design uploaded successfully!');
-    setUploadData({
-      projectId: '',
-      designType: 'architectural',
-      file: null,
-      description: ''
-    });
+
+    if (!uploadData.projectId) {
+      setError('Please select a project.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadData.file);
+      formData.append('projectId', uploadData.projectId);
+      formData.append('designType', uploadData.designType);
+      formData.append('description', uploadData.description);
+      formData.append('consultantId', consultantId);
+
+      await axios.post(`${API_BASE}/api/documents/upload`, formData, {
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setStatus('Building plan design uploaded successfully!');
+      setUploadData({
+        projectId: '',
+        designType: 'architectural',
+        file: null,
+        description: ''
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload design.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -70,6 +127,7 @@ function UploadBuildingPlanDesign() {
           </div>
 
           {status && <div className="alert alert-success">{status}</div>}
+          {error && <div className="alert alert-danger">{error}</div>}
 
           <div className="row">
             <div className="col-md-8">
@@ -80,16 +138,21 @@ function UploadBuildingPlanDesign() {
                 <div className="card-body">
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label className="form-label">Project ID</label>
-                      <input 
-                        type="text" 
-                        className="form-control" 
+                      <label className="form-label">Project *</label>
+                      <select 
+                        className="form-select" 
                         name="projectId" 
                         value={uploadData.projectId} 
                         onChange={handleChange}
-                        placeholder="e.g., BP-2024-001"
-                        required 
-                      />
+                        required
+                      >
+                        <option value="">Select a project</option>
+                        {projects.map(project => (
+                          <option key={project.id} value={project.id}>
+                            {project.projectName} - {project.address}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="mb-3">
@@ -110,7 +173,7 @@ function UploadBuildingPlanDesign() {
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label">Design File</label>
+                      <label className="form-label">Design File *</label>
                       <input 
                         type="file" 
                         className="form-control" 
@@ -135,8 +198,17 @@ function UploadBuildingPlanDesign() {
                     </div>
 
                     <div className="d-flex gap-2">
-                      <button type="submit" className="btn btn-info">
-                        <i className="bi bi-upload me-2"></i>Upload Design
+                      <button type="submit" className="btn btn-info" disabled={uploading}>
+                        {uploading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-upload me-2"></i>Upload Design
+                          </>
+                        )}
                       </button>
                       <button type="button" className="btn btn-secondary" onClick={() => setUploadData({projectId: '', designType: 'architectural', file: null, description: ''})}>
                         Clear Form
@@ -165,32 +237,6 @@ function UploadBuildingPlanDesign() {
                   </div>
                   <div className="alert alert-warning">
                     <strong>Quality Check:</strong> All designs will be reviewed by engineers before approval.
-                  </div>
-                </div>
-              </div>
-
-              <div className="card mt-3">
-                <div className="card-header">
-                  <h5>Recent Uploads</h5>
-                </div>
-                <div className="card-body">
-                  <div className="list-group list-group-flush">
-                    <div className="list-group-item d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>BP-2024-001</strong>
-                        <br />
-                        <small className="text-muted">Architectural Plans</small>
-                      </div>
-                      <span className="badge bg-success">Approved</span>
-                    </div>
-                    <div className="list-group-item d-flex justify-content-between align-items-center">
-                      <div>
-                        <strong>BP-2024-002</strong>
-                        <br />
-                        <small className="text-muted">Structural Design</small>
-                      </div>
-                      <span className="badge bg-warning">Under Review</span>
-                    </div>
                   </div>
                 </div>
               </div>
